@@ -17,6 +17,20 @@ class Person(db.Model):
 
     def __repr__(self):
         return f"<Person {self.pid}>"
+    
+    def serialize(self):
+        return {
+            "pfname":self.pfname,
+            "psname":self.psname,
+            "plname":self.plname,
+            "plname2":self.plname2,
+            "prut":self.prut,
+            "pphone":self.pphone,
+            "pdob":self.pdob,
+            "pgender":self.pgender,
+            "pphoto":self.pphoto
+        }    
+
 
 class User(db.Model):
     uid   = db.Column(db.Integer, primary_key=True)
