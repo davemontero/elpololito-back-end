@@ -21,7 +21,7 @@ class Person(db.Model):
 class User(db.Model):
     uid   = db.Column(db.Integer, primary_key=True)
     umail = db.Column(db.String(120), unique=True, nullable=False)
-    upass = db.Column(db.String(120), nullable=False)
+    upass   = db.Column(db.String(120), nullable=False)
     person_id = db.Column(db.Integer, db.ForeignKey('person.pid'), nullable=False)
 
     def __repr__(self):

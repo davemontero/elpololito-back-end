@@ -1,3 +1,4 @@
+import json
 import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
@@ -13,32 +14,38 @@ Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
 
-@app.route("/login", methods=["GET"])
-def login():
-    user = request.json.get("user")
-    pswd = request.json.get("password")
-    dbpass = User.query.filter_by(umail=user).first()
-    if pswd == dbpass.upass:
-        return jsonify("Puede ingresar")
-
 @app.route("/create-user", methods=['POST'])
-def create_person():
-    user = Person()
-    user.pfname  = request.json.get("pfname")
-    user.psname  = request.json.get("psname")
-    user.plname  = request.json.get("plname")
-    user.plname2 = request.json.get("plname2")
-    user.prut    = request.json.get("prut")
-    user.pphone  = request.json.get("pphone")
-    user.pdob    = request.json.get("pdob")
-    user.pgender = request.json.get("pgender")
-    user.pphoto  = request.json.get("pphoto")
+def create_user():
+    user = User()
+    user.umail  = request.json.get("mail")
+    user.upass  = request.json.get("password")
+    user.person_id = request.json.get("pid")
 
     db.session.add(user)
     db.session.commit()
 
     return user.serialize()
 
+@app.route("/login")
+def login():
+    user = request.json.get("user")
+    pwrd = request.json.get("password")
+    dbuser = User.query.filter_by(umail=user).first()
+    if pwrd == dbuser.upass:
+        return jsonify("Inicio exitoso")
+    else:
+        return jsonify("Usuario o clave erronea")
+
+
+@app.route("/password-recovery")
+def recovery():
+    user = request.json.get("mail")
+    exist = User.query.filter_by(umail=user).first()
+    
+    if exist:
+        return jsonify("Se enviara correo de recuperación")
+    else:
+        return jsonify("Usuario ingresado no posee cuenta")
 
 if __name__ == "__main__":
     app.run(host="localhost")
