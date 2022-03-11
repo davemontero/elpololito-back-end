@@ -1,5 +1,6 @@
+from enum import unique
 from flask_sqlalchemy import SQLAlchemy
-
+from datetime import datetime
 db = SQLAlchemy()
 
 class Person(db.Model):
@@ -8,7 +9,7 @@ class Person(db.Model):
     psname  = db.Column(db.String(50))
     plname  = db.Column(db.String(50), nullable=False)
     plname2 = db.Column(db.String(50))
-    prut    = db.Column(db.Integer, nullable=False)
+    prut    = db.Column(db.Integer, unique=True, nullable=False)
     pphone  = db.Column(db.Integer)
     pdob    = db.Column(db.Date, nullable=False) 
     pgender = db.Column(db.String(10))
@@ -20,6 +21,7 @@ class Person(db.Model):
     
     def serialize(self):
         return {
+            "pid":self.pid,
             "pfname":self.pfname,
             "psname":self.psname,
             "plname":self.plname,
@@ -28,7 +30,8 @@ class Person(db.Model):
             "pphone":self.pphone,
             "pdob":self.pdob,
             "pgender":self.pgender,
-            "pphoto":self.pphoto
+            "pphoto":self.pphoto,
+            "user":self.user
         }    
 
 

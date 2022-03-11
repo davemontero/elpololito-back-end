@@ -1,9 +1,9 @@
 import os
-from urllib import request
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_migrate import Migrate
 from flask_cors import CORS
 from models import db, Person
+from datetime import datetime
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 dbname = 'elpololito.db'
@@ -23,57 +23,22 @@ def create_person():
     plname2 = request.json.get("plname2")
     prut = request.json.get("prut")
     pphone = request.json.get("pphone")
-    pdob = request.json.get("pdob")
+    pdob = datetime.strptime(request.json.get("pdob"), '%Y-%m-%d')
     pgender = request.json.get("pgender")
     pphoto = request.json.get("pphoto")
     
+
     person.pfname = pfname
     person.psname = psname
     person.plname = plname
     person.plname2 = plname2
     person.prut = prut
     person.pphone = pphone
-    person.pdob = pdob
+    person.pdob = pdob.date()
     person.pgender = pgender
     person.pphoto = pphoto
-    
-    if pfname == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if psname == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if plname == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if plname2 == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if prut == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if pphone == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if pdob == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if pgender == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    if pphoto == "":
-        return jsonify({
-            "msg":"malo el nombre tavacio"
-        }),400
-    
+
+
     db.session.add(person)
     db.session.commit()
 
