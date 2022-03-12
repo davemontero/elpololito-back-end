@@ -27,17 +27,63 @@ def create_person():
     pgender = request.json.get("pgender")
     pphoto = request.json.get("pphoto")
     
+    if type(pfname) != str:
+        return jsonify({
+            "msg":"El nombre debe ser tipo string"
+        }), 400
+        
+    if type(psname) != str:
+        return jsonify({
+            "msg":"El segundo nombre debe ser tipo string"
+        }), 400
 
-    person.pfname = pfname
+    if type(plname) != str:
+        return jsonify({
+            "msg":"El apellido paterno debe ser tipo string"
+        }), 400
+
+    if type(plname2) != str:
+        return jsonify({
+            "msg":"El apellido materno debe ser tipo string"
+        }), 400
+
+    if type(pgender) != str:
+        return jsonify({
+            "msg":"El genero debe ser tipo string"
+        }), 400
+
+    if len(pfname)<1:
+        return jsonify({
+            "msg":"El nombre no puede estar vacio o debe tener al menos 1 caracter"
+        }), 400
+    if len(psname)<1:
+        return jsonify({
+            "msg":"El nombre no puede estar vacio o debe tener al menos 1 caracter"
+        }), 400
+    if len(plname)<1:
+        return jsonify({
+            "msg":"El nombre no puede estar vacio o debe tener al menos 1 caracter"
+        }), 400
+    if len(plname2)<1:
+        return jsonify({
+            "msg":"El nombre no puede estar vacio o debe tener al menos 1 caracter"
+        }), 400
+    if len(pgender)<1 or len(pgender)<2:
+        return jsonify({
+            "msg":"El nombre no puede estar vacio o debe tener al menos 1 caracter"
+        }), 400
+    
+    
+
+    person.pfname = pfname.strip()
     person.psname = psname
     person.plname = plname
     person.plname2 = plname2
     person.prut = prut
     person.pphone = pphone
-    person.pdob = pdob.date()
+    person.pdob = pdob
     person.pgender = pgender
     person.pphoto = pphoto
-
 
     db.session.add(person)
     db.session.commit()
