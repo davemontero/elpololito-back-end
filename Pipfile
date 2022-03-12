@@ -9,8 +9,10 @@ flask-cors = "*"
 flask-migrate = "*"
 flask-sqlalchemy = "*"
 argon2-cffi = "*"
+pymysql = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.10"

@@ -5,56 +5,122 @@ from flask_cors import CORS
 from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
+from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-dbname = 'elpololito.db'
-
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASEDIR, dbname)}"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
 
+resp = {
+    "check": True,
+    "msg": "",
+    "error": ""
+}
+# Dave code
+@app.route("/login")
+def login():
+    user = request.json.get("user")
+    pwrd = request.json.get("password")
+
+    ucheck = email_check(user)
+    pcheck = password_check(pwrd)
+
+    if ucheck is False:
+        resp["check"] = False
+        resp["msg"]= "Favor, ingresar un correo valido"
+        return jsonify(resp)
+    
+    if pcheck["val"] is False:
+        resp["check"] = False
+        resp["msg"] = "Usuario o contraseña incorrecto"
+        resp["error"] = pcheck["msg"]
+        return jsonify(resp)
+
+    dbuser = User.query.filter_by(umail=user).first()
+    vp = verifyPassword(dbuser.upass, pwrd)
+    if  vp:
+        resp["msg"] = "Inicio exitoso"
+        return jsonify(resp)
+    else: 
+        resp["check"] = False
+        resp["msg"] = "Usuario o contraseña incorrecto"
+        resp["error"] = vp["e"]
+        return jsonify(resp)
+
+@app.route("/password-recovery")
+def recovery():
+    user = request.json.get("mail")
+    ucheck = email_check(user)
+
+    if ucheck is False:
+        resp["check"] = False
+        resp["msg"]= "Favor, ingresar un correo valido"
+        return jsonify(resp)
+
+    exist = User.query.filter_by(umail=user).first()
+
+    if exist:
+        resp["check"] = True
+        resp["msg"]= "Se enviará correo de recuperación"
+        return jsonify(resp)
+    else:
+        resp["check"] = False
+        resp["msg"]= "Correo ingresado no posee cuenta"
+        return jsonify(resp)
+
+@app.route("/reset-password/<int:id>", methods=['PUT'])
+def resetPassword(id):
+    dbuser = User.query.filter_by(uid=id).first()
+    newPassword = request.json.get("password")
+
+    pcheck = password_check(newPassword)
+    if pcheck["val"] is False:
+        resp["check"] = False
+        resp["msg"] = "La contraseña no cumple con lo establecido"
+        resp["error"] = pcheck["msg"]
+        return jsonify(resp)
+
+    dbuser.upass = hashPassword(newPassword)
+    db.session.commit()
+    resp["check"] = True
+    resp["msg"] = "Contraseña cambiada exitosamente"
+    return jsonify(resp)
+
+# Oscar's code
 @app.route("/create-user", methods=['POST'])
 def create_user():
     user = User()
-    user.umail  = request.json.get("mail")
-    user.upass  = hashPassword(request.json.get("password"))
-    user.person_id = request.json.get("pid")
+    umail = request.json.get("mail")
+    upass = request.json.get("password")
+    person_id = request.json.get("pid")
+
+    ucheck = email_check(umail)
+    pcheck = password_check(upass)
+
+    if ucheck is False:
+        resp["check"] = False
+        resp["msg"]= "Favor, ingresar un correo valido"
+        return jsonify(resp)
+    
+    if pcheck["val"] is False:
+        resp["check"] = False
+        resp["msg"] = "La contraseña no cumple con lo establecido"
+        resp["error"] = pcheck["msg"]
+        return jsonify(resp)
+
+    user.umail = umail
+    user.upass  = hashPassword(upass)
+    user.person_id = person_id
 
     db.session.add(user)
     db.session.commit()
 
     return user.serialize()
 
-@app.route("/login")
-def login():
-    user = request.json.get("user")
-    pwrd = request.json.get("password")
-    dbuser = User.query.filter_by(umail=user).first()
-    if verifyPassword(dbuser.upass, pwrd) is True:
-        return jsonify("Inicio exitoso")
-    else: 
-        return jsonify("Usuario o clave erronea")
 
-
-@app.route("/password-recovery")
-def recovery():
-    user = request.json.get("mail")
-    exist = User.query.filter_by(umail=user).first()
-
-    if exist:
-        return jsonify("Se enviara correo de recuperación")
-    else:
-        return jsonify("Usuario ingresado no posee cuenta")
-
-
-@app.route("/reset-password/<int:id>", methods=['PUT'])
-def resetPassword(id):
-    dbuser = User.query.filter_by(uid=id).first()
-    dbuser.upass = hashPassword(request.json.get("password"))
-    db.session.commit()
-    return True
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
