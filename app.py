@@ -1,9 +1,9 @@
-import json
 import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
-from models import db, Person, User
+from models import db, User, Person
+from hash import verifyPassword, hashPassword
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 dbname = 'elpololito.db'
@@ -18,7 +18,7 @@ CORS(app)
 def create_user():
     user = User()
     user.umail  = request.json.get("mail")
-    user.upass  = request.json.get("password")
+    user.upass  = hashPassword(request.json.get("password"))
     user.person_id = request.json.get("pid")
 
     db.session.add(user)
@@ -31,9 +31,9 @@ def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
     dbuser = User.query.filter_by(umail=user).first()
-    if pwrd == dbuser.upass:
+    if verifyPassword(dbuser.upass, pwrd) is True:
         return jsonify("Inicio exitoso")
-    else:
+    else: 
         return jsonify("Usuario o clave erronea")
 
 
@@ -41,11 +41,32 @@ def login():
 def recovery():
     user = request.json.get("mail")
     exist = User.query.filter_by(umail=user).first()
-    
+
     if exist:
         return jsonify("Se enviara correo de recuperación")
     else:
         return jsonify("Usuario ingresado no posee cuenta")
+
+
+@app.route("/reset-password/<int:id>", methods=['PUT'])
+def resetPassword(id):
+    dbuser = User.query.filter_by(uid=id).first()
+    dbuser.upass = hashPassword(request.json.get("password"))
+    db.session.commit()
+    return True
+
+@app.route("/create-person", methods=['POST'])
+def createPerson():
+    person = Person()
+    person.pfname = request.json.get("fname")
+    person.psname = request.json.get("sname")
+    person.plname = request.json.get("lname")
+    person.plname2 = request.json.get("lname2")
+    person.prut = request.json.get("rut")
+    person.pphone = request.json.get("phone")
+    person.pdob = request.json.get("dob")
+    person.pgender = request.json.get("gender")
+    person.pphoto = request.json.get("photo")
 
 if __name__ == "__main__":
     app.run(host="localhost")
