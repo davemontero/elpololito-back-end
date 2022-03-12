@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
+from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
 
@@ -58,15 +59,20 @@ def resetPassword(id):
 @app.route("/create-person", methods=['POST'])
 def createPerson():
     person = Person()
+    pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
     person.pfname = request.json.get("fname")
     person.psname = request.json.get("sname")
     person.plname = request.json.get("lname")
     person.plname2 = request.json.get("lname2")
     person.prut = request.json.get("rut")
     person.pphone = request.json.get("phone")
-    person.pdob = request.json.get("dob")
+    person.pdob = pdob.date()
     person.pgender = request.json.get("gender")
-    person.pphoto = request.json.get("photo")
+
+    db.session.add(person)
+    db.session.commit()
+
+    return person.serialize()
 
 if __name__ == "__main__":
     app.run(host="localhost")
