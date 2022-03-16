@@ -9,7 +9,7 @@ from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
@@ -20,7 +20,7 @@ resp = {
     "error": ""
 }
 # Dave code
-@app.route("/login")
+@app.route("/login", methods=['POST'])
 def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
