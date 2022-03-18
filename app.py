@@ -15,12 +15,12 @@ db.init_app(app)
 CORS(app)
 
 resp = {
-    "check": True,
+    "status": True,
     "msg": "",
     "error": ""
 }
 # Dave code
-@app.route("/login")
+@app.route("/login", methods=["POST"])
 def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
@@ -29,12 +29,12 @@ def login():
     pcheck = password_check(pwrd)
 
     if ucheck is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"]= "Favor, ingresar un correo valido"
         return jsonify(resp)
     
     if pcheck["val"] is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
@@ -45,7 +45,7 @@ def login():
         resp["msg"] = "Inicio exitoso"
         return jsonify(resp)
     else: 
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
         resp["error"] = vp["e"]
         return jsonify(resp)
@@ -56,18 +56,18 @@ def recovery():
     ucheck = email_check(user)
 
     if ucheck is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"]= "Favor, ingresar un correo valido"
         return jsonify(resp)
 
     exist = User.query.filter_by(umail=user).first()
 
     if exist:
-        resp["check"] = True
+        resp["status"] = True
         resp["msg"]= "Se enviará correo de recuperación"
         return jsonify(resp)
     else:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"]= "Correo ingresado no posee cuenta"
         return jsonify(resp)
 
@@ -78,7 +78,7 @@ def resetPassword(id):
 
     pcheck = password_check(newPassword)
     if pcheck["val"] is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"] = "La contraseña no cumple con lo establecido"
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
@@ -101,12 +101,12 @@ def create_user():
     pcheck = password_check(upass)
 
     if ucheck is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"]= "Favor, ingresar un correo valido"
         return jsonify(resp)
     
     if pcheck["val"] is False:
-        resp["check"] = False
+        resp["status"] = False
         resp["msg"] = "La contraseña no cumple con lo establecido"
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
