@@ -9,7 +9,7 @@ from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
@@ -41,8 +41,14 @@ def login():
         return jsonify(resp)
 
     dbuser = User.query.filter_by(umail=user).first()
-    vp = verifyPassword(dbuser.upass, pwrd)
-    if  vp:
+    
+    if not dbuser:
+        resp["status"] = False
+        resp["msg"] = "Usuario ingresado no existe registrado"
+        resp["error"] = "Usuario ingresado no existe registrado"
+        return jsonify(resp)
+    
+    if  verifyPassword(dbuser.upass, pwrd) is True:
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
@@ -50,7 +56,7 @@ def login():
     else: 
         resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
-        resp["error"] = vp["e"]
+        resp["error"] = "Usuario o contraseña incorrecto"
         return jsonify(resp)
 
 @app.route("/password-recovery")
