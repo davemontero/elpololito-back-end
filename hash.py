@@ -12,3 +12,4 @@ def verifyPassword(dbpass, password):
         return True
     except exceptions.VerificationError as e: 
         return e
+
