@@ -8,9 +8,12 @@ flask = "*"
 flask-cors = "*"
 flask-migrate = "*"
 flask-sqlalchemy = "*"
+argon2-cffi = "*"
 pymysql = "*"
+cryptography = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.10"
