@@ -71,23 +71,23 @@ def recovery():
         resp["msg"]= "Correo ingresado no posee cuenta"
         return jsonify(resp)
 
-#@app.route("/reset-password/<int:id>", methods=['PUT'])
-#def resetPassword(id):
-#    dbuser = User.query.filter_by(uid=id).first()
-#    newPassword = request.json.get("password")
-#
-#    pcheck = password_check(newPassword)
-#    if pcheck["val"] is False:
-#        resp["check"] = False
-#        resp["msg"] = "La contraseña no cumple con lo establecido"
-#        resp["error"] = pcheck["msg"]
-#        return jsonify(resp)
-#
-#    dbuser.upass = hashPassword(newPassword)
-#    db.session.commit()
-#    resp["check"] = True
-#    resp["msg"] = "Contraseña cambiada exitosamente"
-#    return jsonify(resp)
+@app.route("/reset-password/<int:id>", methods=['PUT'])
+def resetPassword(id):
+    dbuser = User.query.filter_by(uid=id).first()
+    newPassword = request.json.get("password")
+
+    pcheck = password_check(newPassword)
+    if pcheck["val"] is False:
+        resp["check"] = False
+        resp["msg"] = "La contraseña no cumple con lo establecido"
+        resp["error"] = pcheck["msg"]
+        return jsonify(resp)
+
+    dbuser.upass = hashPassword(newPassword)
+    db.session.commit()
+    resp["check"] = True
+    resp["msg"] = "Contraseña cambiada exitosamente"
+    return jsonify(resp)
 
 # Oscar's code
 @app.route("/create-user", methods=['POST'])
