@@ -26,27 +26,6 @@ resp = {
     "error": ""
 }
 
-<<<<<<< HEAD
-
-# # Mati code
-
-
-# @app.route("/token", methods=["POST"])
-# def create_token():
-#     username = request.json.get("username", None)
-#     password = request.json.get("password", None)
-    
-#     user = User.query.filter_by(username=username, password=password).first()
-#     if user is None:
-#         return jsonify({"msg": "Bad username or password"}), 401
-    
- 
-#     access_token = create_access_token(identity=user)
-#     return jsonify({ "token": access_token, "user_id": user.id })
-
-
-=======
->>>>>>> da58bb5a060b9900fec87b79e8a784950a534886
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
@@ -77,13 +56,9 @@ def login():
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
         resp["msg"] = "Inicio exitoso"
-<<<<<<< HEAD
-        
-=======
         resp["error"] = ""
         resp["status"] = True
         return jsonify(resp)
->>>>>>> da58bb5a060b9900fec87b79e8a784950a534886
     else: 
         resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
