@@ -25,7 +25,7 @@ class User(db.Model):
 # person_profession = db.Table('person_profession', 
 #     db.Column('fk_person_id', db.Integer, db.ForeignKey('person.person_id')), 
 #     db.Column('fk_profession_id', db.Integer, db.ForeignKey('professions.profession_id')))
-class Professional(db.Model):
+class Person(db.Model):
     person_id     = db.Column(db.Integer, primary_key=True)
     pfname  = db.Column(db.String(50), nullable=False)
     psname  = db.Column(db.String(50))

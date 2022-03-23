@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
 from datetime import datetime
-from models import db, User, Professional, Publication, Employer
+from models import db, User, Person
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
 
@@ -18,9 +18,9 @@ resp = {
     "check": True,
     "msg": "",
     "error": ""
-    }
+}
 # Dave code
-@app.route("/login", methods=['POST'])
+@app.route("/login")
 def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
@@ -50,7 +50,7 @@ def login():
         resp["error"] = vp["e"]
         return jsonify(resp)
 
-@app.route("/password-recovery", methods=['POST'])
+@app.route("/password-recovery")
 def recovery():
     user = request.json.get("mail")
     ucheck = email_check(user)
@@ -71,23 +71,23 @@ def recovery():
         resp["msg"]= "Correo ingresado no posee cuenta"
         return jsonify(resp)
 
-#@app.route("/reset-password/<int:id>", methods=['PUT'])
-#def resetPassword(id):
-#    dbuser = User.query.filter_by(uid=id).first()
-#    newPassword = request.json.get("password")
-#
-#    pcheck = password_check(newPassword)
-#    if pcheck["val"] is False:
-#        resp["check"] = False
-#        resp["msg"] = "La contraseña no cumple con lo establecido"
-#        resp["error"] = pcheck["msg"]
-#        return jsonify(resp)
-#
-#    dbuser.upass = hashPassword(newPassword)
-#    db.session.commit()
-#    resp["check"] = True
-#    resp["msg"] = "Contraseña cambiada exitosamente"
-#    return jsonify(resp)
+@app.route("/reset-password/<int:id>", methods=['PUT'])
+def resetPassword(id):
+    dbuser = User.query.filter_by(uid=id).first()
+    newPassword = request.json.get("password")
+
+    pcheck = password_check(newPassword)
+    if pcheck["val"] is False:
+        resp["check"] = False
+        resp["msg"] = "La contraseña no cumple con lo establecido"
+        resp["error"] = pcheck["msg"]
+        return jsonify(resp)
+
+    dbuser.upass = hashPassword(newPassword)
+    db.session.commit()
+    resp["check"] = True
+    resp["msg"] = "Contraseña cambiada exitosamente"
+    return jsonify(resp)
 
 # Oscar's code
 @app.route("/create-user", methods=['POST'])
@@ -122,9 +122,9 @@ def create_user():
 
 
 
-@app.route("/create-professional", methods=['POST'])
-def create_professional():
-    person = Professional()
+@app.route("/create-person", methods=['POST'])
+def createPerson():
+    person = Person()
     pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
     person.pfname = request.json.get("fname")
     person.psname = request.json.get("sname")
@@ -134,47 +134,12 @@ def create_professional():
     person.pphone = request.json.get("phone")
     person.pdob = pdob.date()
     person.pgender = request.json.get("gender")
+    person.pphoto = request.json.get("photo")
 
     db.session.add(person)
     db.session.commit()
 
-    return jsonify(person.serialize()), 200
-
-@app.route("/create-petition", methods=['POST'])
-def create_petition():
-    petition = Publication()
-    create_at  = datetime.strptime(request.json.get("ped"), '%Y-%m-%d')
-    Pe_Title = request.json.get("PTitle")
-    publication_desc = request.json.get("Pcontend")
-    publication_place = request.json.get("Pplace")
-    
-    db.session.add(petition)
-    db.session.commit()
-
-    return jsonify(petition.serialize()), 200
-
+    return person.serialize()
 
 if __name__ == "__main__":
     app.run(host="localhost")
-
-
-@app.route("/create-employer", methods=['POST'])
-def create_employer():
-    employer = Employer()
-    pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
-    employer.pfname = request.json.get("fname")
-    employer.psname = request.json.get("sname")
-    employer.plname = request.json.get("lname")
-    employer.plname2 = request.json.get("lname2")
-    employer.prut = request.json.get("rut")
-    employer.pphone = request.json.get("phone")
-    employer.pdob = pdob.date()
-    employer.pgender = request.json.get("gender")
-    employer.paddress = request.json.get("address")
-    employer.paddress2 = request.json.get("address2")
-    employer.pcity = request.json.get("city")
-
-    db.session.add(employer)
-    db.session.commit()
-
-    return jsonify(employer.serialize()), 200
