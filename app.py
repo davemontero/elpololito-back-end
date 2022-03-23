@@ -58,7 +58,9 @@ def login():
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
-        return jsonify(resp)
+        access_token = create_access_token(identity=user.id)
+        return jsonify(resp, { "token": access_token, "user_id": user.id })
+        
     else: 
         resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
