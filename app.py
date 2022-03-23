@@ -49,9 +49,9 @@ def login():
         return jsonify(resp)
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
+        resp["status"] = True
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
-        resp["status"] = True
         return jsonify(resp)
     else: 
         resp["status"] = False
