@@ -28,7 +28,8 @@ class Person(db.Model):
     def serialize(self):
         return {
             "person_id": self.person_id,
-            "fullname": f"{self.person_fname} {self.person_lname}"
+            "fullname": f"{self.person_fname} {self.person_lname}",
+            "Confirmation":True
         }
 
 class User(db.Model):
