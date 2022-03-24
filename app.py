@@ -6,6 +6,7 @@ from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
+from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -49,9 +50,9 @@ def login():
         return jsonify(resp)
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
+        resp["status"] = True
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
-        resp["status"] = True
         return jsonify(resp)
     else: 
         resp["status"] = False
@@ -59,9 +60,10 @@ def login():
         resp["error"] = "Usuario o contraseña incorrecto"
         return jsonify(resp)
 
-@app.route("/password-recovery")
+@app.route("/password-recovery", methods=["POST"])
 def recovery():
     user = request.json.get("mail")
+    print(user)
     ucheck = email_check(user)
 
     if ucheck is False:
@@ -72,9 +74,10 @@ def recovery():
     exist = User.query.filter_by(user_email=user).first()
 
     if exist:
-        resp["status"] = True
-        resp["msg"]= "Se enviará correo de recuperación"
-        return jsonify(resp)
+        if recovery_mail(exist.user_email, exist.user_id) is True:
+            resp["status"] = True
+            resp["msg"] = "Correo enviado, revise su bandeja de entrada"
+            return jsonify(resp)
     else:
         resp["status"] = False
         resp["msg"]= "Correo ingresado no posee cuenta"
