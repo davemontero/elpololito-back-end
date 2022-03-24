@@ -13,13 +13,7 @@ from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-<<<<<<< HEAD
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:Ae18957319@localhost/elpololito"
-=======
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
-app.config["JWT_SECRET_KEY"] = "chanchanchan"  
-jwt = JWTManager(app)
->>>>>>> 442b43378621fdafff6d1288675579d37e6ef7b6
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
@@ -146,7 +140,6 @@ def create_user():
 def createPerson():
     person = Person()
     pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
-<<<<<<< HEAD
     person.pfname = request.json.get("fname")
     person.psname = request.json.get("sname")
     person.plname = request.json.get("lname")
@@ -156,16 +149,6 @@ def createPerson():
     person.pdob = pdob.date()
     person.pgender = request.json.get("gender")
     person.pphoto = request.json.get("photo")
-=======
-    person.person_fname = request.json.get("fname")
-    person.person_sname = request.json.get("sname")
-    person.person_lname = request.json.get("lname")
-    person.person_lname2 = request.json.get("lname2")
-    person.person_rut = request.json.get("rut")
-    person.person_phone = request.json.get("phone")
-    person.person_dob = pdob.date()
-    person.person_gender = request.json.get("gender")
->>>>>>> 442b43378621fdafff6d1288675579d37e6ef7b6
 
     db.session.add(person)
     db.session.commit()
