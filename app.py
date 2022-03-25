@@ -55,11 +55,12 @@ def login():
         return jsonify(resp)
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
+        user=User()
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
-        access_token = create_access_token(identity=user.id)
-        return jsonify(resp, { "token": access_token, "user_id": user.id })
+        access_token = create_access_token(identity=user.user_id)
+        return jsonify(resp, { "token": access_token, "user_id": user.user_id })
         
     else: 
         resp["status"] = False
