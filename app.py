@@ -2,6 +2,10 @@ import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
 from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
@@ -11,6 +15,8 @@ from mail import recovery_mail
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
+app.config["JWT_SECRET_KEY"] = "chanchanchan"  
+jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
@@ -34,7 +40,7 @@ def login():
         resp["status"] = False
         resp["msg"]= "Favor, ingresar un correo valido"
         return jsonify(resp)
-    
+        
     if pcheck["val"] is False:
         resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
@@ -53,14 +59,18 @@ def login():
         resp["status"] = True
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
-        return jsonify(resp)
+        resp["status"] = True
+        access_token = create_access_token(identity=user.id)
+        return jsonify(resp, { "token": access_token, "user_id": user.id })
+        
     else: 
         resp["status"] = False
         resp["msg"] = "Usuario o contraseña incorrecto"
         resp["error"] = "Usuario o contraseña incorrecto"
         return jsonify(resp)
 
-@app.route("/password-recovery", methods=["POST"])
+
+@app.route("/password-recovery",methods=['POST'])
 def recovery():
     user = request.json.get("mail")
     print(user)
@@ -141,6 +151,7 @@ def createPerson():
     db.session.commit()
 
     return person.serialize()
+    
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
