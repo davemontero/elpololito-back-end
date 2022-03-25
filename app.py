@@ -7,13 +7,15 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from datetime import datetime
-from models import db, User, Person
+from models import db, User, Person, Publication
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:Ae18957319@localhost/elpololito"
+app.config["JWT_SECRET_KEY"] = "chanchanchan"  
+jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
 CORS(app)
@@ -105,16 +107,23 @@ def resetPassword(id):
     resp["msg"] = "Contraseña cambiada exitosamente"
     return jsonify(resp)
 
-# Oscar's code
-@app.route("/create-user", methods=['POST'])
-def create_user():
+@app.route("/create-person", methods=['POST'])
+def createPerson():
+    person = Person()
     user = User()
-    umail = request.json.get("mail")
-    upass = request.json.get("password")
-    person_id = request.json.get("pid")
+    pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
+    person.person_fname = request.json.get("fname")
+    person.person_sname = request.json.get("sname")
+    person.person_lname = request.json.get("lname")
+    person.person_lname2 = request.json.get("lname2")
+    person.person_rut = request.json.get("rut")
+    person.person_phone = request.json.get("phone")
+    person.person_dob = pdob.date()
+    person.person_gender = request.json.get("gender")
 
-    ucheck = email_check(umail)
-    pcheck = password_check(upass)
+
+    ucheck = email_check(request.json.get("mail"))
+    pcheck = password_check(request.json.get("password"))
 
     if ucheck is False:
         resp["status"] = False
@@ -127,33 +136,28 @@ def create_user():
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
 
-    user.user_email = umail
-    user.user_passwd  = hashPassword(upass)
-    user.fk_person_id = person_id
-
-    db.session.add(user)
-    db.session.commit()
-
-    return user.serialize()
-
-@app.route("/create-person", methods=['POST'])
-def createPerson():
-    person = Person()
-    pdob = datetime.strptime(request.json.get("dob"), '%Y-%m-%d')
-    person.pfname = request.json.get("fname")
-    person.psname = request.json.get("sname")
-    person.plname = request.json.get("lname")
-    person.plname2 = request.json.get("lname2")
-    person.prut = request.json.get("rut")
-    person.pphone = request.json.get("phone")
-    person.pdob = pdob.date()
-    person.pgender = request.json.get("gender")
-    person.pphoto = request.json.get("photo")
-
     db.session.add(person)
+    db.session.flush()
+    db.session.refresh(person)
+
+    user.user_email = request.json.get("mail")
+    user.user_passwd  = hashPassword(request.json.get("password"))
+    user.fk_person_id = person.person_id
+    db.session.add(user)
     db.session.commit()
 
     return person.serialize()
 
+
+@app.route("/create-publication", methods=['POST'])
+def createPublication():
+    publication = Publication()
+    publication.publication_desc = request.json.get("body")
+    publication.publication_place = request.json.get("address")
+    publication.publication_title = request.json.get("title")
+
+
+    return "exito"
+
 if __name__ == "__main__":
-    app.run(host="localhost")
+    app.run(host="localhost",port="3000")
