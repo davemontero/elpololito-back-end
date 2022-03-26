@@ -60,7 +60,7 @@ def login():
         resp["error"] = ""
         resp["status"] = True
         access_token = create_access_token(identity=dbuser)
-        return jsonify(resp, { "token": access_token})
+        return jsonify(resp, { "token": access_token} )
         
     else: 
         resp["status"] = False
