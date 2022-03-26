@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
@@ -52,12 +52,11 @@ def login():
         return jsonify(resp)
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
-        user=User()
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
-        access_token = create_access_token(identity=user.user_id)
-        return jsonify(resp, { "token": access_token, "user_id": user.user_id })
+        access_token = create_access_token(identity=dbuser)
+        return jsonify(resp, { "token": access_token} )
         
     else: 
         resp["status"] = False
@@ -165,6 +164,30 @@ def createPerson():
     resp["error"] = ""
     return jsonify(resp)
 
+@jwt.user_identity_loader
+def user_identity_lookup(dbuser):
+    return dbuser.user_id
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return User.query.filter_by(id=identity).one_or_none()
+
+
+@app.route("/home", methods=["GET"])
+@jwt_required()
+def home():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+@app.route("/who_am_i", methods=["GET"])
+@jwt_required()
+def protected():
+    
+    return jsonify(
+        id=current_user.user_id,
+        email=current_user.user_email,        
+    )
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
