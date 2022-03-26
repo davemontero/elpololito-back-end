@@ -25,7 +25,10 @@ resp = {
     "msg": "",
     "error": ""
 }
-
+token = {
+    "token": "",
+    "user_id": ""
+}
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
@@ -47,6 +50,7 @@ def login():
         return jsonify(resp)
     
     dbuser = User.query.filter_by(user_email=user).first()
+
     
     if not dbuser:
         resp["status"] = False
@@ -56,11 +60,12 @@ def login():
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
         user=User()
-        resp["msg"] = "Inicio exitoso"
-        resp["error"] = ""
+        resp["msg"] = "Inicio exitoso holanda"
+        resp["error"] = "Todo bien prosiga"
         resp["status"] = True
-        access_token = create_access_token(identity=user.user_id)
-        return jsonify(resp, { "token": access_token, "user_id": user.user_id })
+        token["user_id"] = user.user_id
+        token["token"] = create_access_token(identity= user.user_id)
+        return jsonify(resp, token)
         
     else: 
         resp["status"] = False
@@ -150,15 +155,23 @@ def createPerson():
     return person.serialize()
 
 
-@app.route("/create-publication", methods=['POST'])
+@app.route("/create-publication", methods=['POST','GET'])
 def createPublication():
     publication = Publication()
+    user=User()
     publication.publication_desc = request.json.get("body")
     publication.publication_place = request.json.get("address")
     publication.publication_title = request.json.get("title")
+    publication.fk_user_id = User.user_id
+
+    db.session.add(publication)
+    db.session.flush()
+    db.session.refresh(publication)
+    db.session.commit()
 
 
-    return "exito"
+    return publication.serialize()
+    
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")

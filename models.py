@@ -57,8 +57,14 @@ class Publication(db.Model):
     publication_title   = db.Column(db.String(50), nullable=True)
     create_at           = db.Column(db.DateTime, default=datetime.now())
     fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    
     def __repr__(self):
         return f"<Publication {self.publication_id}>"
+    def serialize(self):
+        return{
+            "Title": self.publication_title,
+            "Body":self.publication_desc
+        }
 
 class Pololito(db.Model):
     pololito_id         = db.Column(db.Integer, primary_key=True)
