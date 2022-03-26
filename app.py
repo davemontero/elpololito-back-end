@@ -2,10 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
 from datetime import datetime
 from models import db, User, Person
 from hash import verifyPassword, hashPassword
@@ -13,7 +10,7 @@ from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
 app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -83,7 +80,7 @@ def recovery():
 
     if exist:
         resp["status"] = True
-        resp["msg"]= "Se enviará correo de recuperación"
+        resp["msg"]= "Se ha enviado correo de recuperación"
         return jsonify(resp)
     else:
         resp["status"] = False
@@ -122,6 +119,12 @@ def createPerson():
     person.person_dob = pdob.date()
     person.person_gender = request.json.get("gender")
 
+    rut_exist = Person.query.filter_by(person_rut=request.json.get("rut")).first()
+
+    if rut_exist:
+        resp["status"] = False
+        resp["msg"]= "El RUT ingresado ya existe"
+        return jsonify(resp)
 
     ucheck = email_check(request.json.get("mail"))
     pcheck = password_check(request.json.get("password"))
@@ -137,17 +140,26 @@ def createPerson():
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
 
+
+    user.user_email = request.json.get("mail")
+    email_exist = User.query.filter_by(user_email=request.json.get("mail")).first()
+    if email_exist:
+        resp["status"] = False
+        resp["msg"]= "El correo ingresado ya existe"
+        return jsonify(resp)
+
     db.session.add(person)
     db.session.flush()
     db.session.refresh(person)
-
-    user.user_email = request.json.get("mail")
     user.user_passwd  = hashPassword(request.json.get("password"))
     user.fk_person_id = person.person_id
     db.session.add(user)
     db.session.commit()
+    resp["status"] = True
+    resp["msg"] = "Usuario creado con exito"
+    resp["error"] = ""
+    return jsonify(resp)
 
-    return person.serialize()
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
