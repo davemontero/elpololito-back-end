@@ -1,6 +1,7 @@
 from enum import unique
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
 db = SQLAlchemy()
 
 person_profession = db.Table('person_profession', 
@@ -54,10 +55,20 @@ class Publication(db.Model):
     publication_id      = db.Column(db.Integer, primary_key=True)
     publication_desc    = db.Column(db.Text(1000), nullable=False)
     publication_place   = db.Column(db.String(50), nullable=True)
+    publication_title   = db.Column(db.String(50), nullable=True)
     create_at           = db.Column(db.DateTime, default=datetime.now())
     fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    
     def __repr__(self):
         return f"<Publication {self.publication_id}>"
+
+    def serialize(self):
+        return{
+            "Title": self.publication_title,
+            "Body":self.publication_desc,
+            "create_at":self.create_at,
+            "place": self.publication_place
+        }
 
 class Pololito(db.Model):
     pololito_id         = db.Column(db.Integer, primary_key=True)
@@ -74,5 +85,3 @@ class Professions(db.Model):
     
     def repr(self):
         return f"<User {self.profession_id}>"
-
-
