@@ -4,10 +4,13 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended import current_user
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from datetime import datetime
-from models import db, User, Person
+
+from itsdangerous import Serializer
+from models import db, User, Person, Publication
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
 
@@ -25,7 +28,10 @@ resp = {
     "msg": "",
     "error": ""
 }
-
+token = {
+    "token": "",
+    "user_id": ""
+}
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
@@ -47,6 +53,7 @@ def login():
         return jsonify(resp)
     
     dbuser = User.query.filter_by(user_email=user).first()
+
     
     if not dbuser:
         resp["status"] = False
@@ -58,8 +65,9 @@ def login():
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
-        access_token = create_access_token(identity=user.id)
-        return jsonify(resp, { "token": access_token, "user_id": user.id })
+        token["token"] = create_access_token(identity=dbuser)
+        token["user_id"] = dbuser.user_id
+        return jsonify(resp, token )
         
     else: 
         resp["status"] = False
@@ -147,6 +155,68 @@ def createPerson():
     db.session.commit()
 
     return person.serialize()
+
+lista = []
+@app.route("/create-publication", methods=['POST','GET'])
+def publication():
+
+
+    if request.method == 'POST':
+        publication = Publication()
+        publication.publication_desc = request.json.get("body")
+        publication.publication_place = request.json.get("address")
+        publication.publication_title = request.json.get("title")
+        publication.fk_user_id = request.json.get("user_id")
+
+        db.session.add(publication)
+        db.session.flush()
+        db.session.refresh(publication)
+        db.session.commit()
+
+        return jsonify("Exito")
+
+    if request.method == 'GET':
+        publications = Publication.query.all()
+        toReturn = [publication.serialize() for publication in publications]
+        return jsonify(toReturn), 200
+
+        
+ 
+#Mati's code
+
+@jwt.user_identity_loader
+def user_identity_lookup(dbuser):
+    return dbuser.user_id
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return User.query.filter_by(user_id=identity).one_or_none()
+
+
+@app.route("/home", methods=["GET"])
+@jwt_required()
+def home():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+
+
+resp2 = {
+    "id": "",
+    "email" : ""
+}   
+
+@app.route("/who_am_i", methods=["GET"])
+@jwt_required()
+def protected():
+
+    resp2["id"]=current_user.user_id,
+    resp2["email"]=current_user.user_email,  
+    
+    return jsonify(resp2
+              
+    )
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
