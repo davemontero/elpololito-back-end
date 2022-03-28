@@ -64,6 +64,7 @@ class Publication(db.Model):
 
     def serialize(self):
         return{
+            "pub_id":self.publication_id,
             "Title": self.publication_title,
             "Body":self.publication_desc,
             "create_at":self.create_at,
