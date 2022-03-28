@@ -11,6 +11,7 @@ flask-sqlalchemy = "*"
 argon2-cffi = "*"
 pymysql = "*"
 cryptography = "*"
+flask-jwt-extended = "*"
 
 [dev-packages]
 autopep8 = "*"
