@@ -5,9 +5,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from datetime import datetime
-
-from itsdangerous import Serializer
-from models import db, User, Person, Publication
+from models import Pololito, Professions, db, User, Person, Publication, Pololito
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
 from mail import recovery_mail
@@ -192,6 +190,14 @@ def publication():
  
 #Mati's code
 
+@app.route("/get-workers", methods=['GET'])
+def workers():
+    results = db.session.query(Person, User, Professions).select_from(Person).join(User).join(Professions)
+
+    for person, professions in results:
+        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+
+
 @jwt.user_identity_loader
 def user_identity_lookup(dbuser):
     return dbuser.user_id
@@ -225,6 +231,30 @@ def protected():
     return jsonify(resp2
               
     )
+
+@app.route("/create-pololito", methods=['POST'])
+def CreatePololito():
+
+    pololito = Pololito()
+    rating="1"
+    pololito.pololito_rating=rating
+    pololito.pololito_status=request.json.get("status")
+    pololito.fk_user_id=request.json.get("user_id")
+    pololito.fk_publication_id=request.json.get("pub_id")
+    db.session.add(pololito)
+    db.session.commit()
+    return jsonify("Felicidades por su pololito exito")
+
+# @app.route("/create-profession", methods=['GET'])
+# def GetProfession():
+
+#     professions = Professions()
+#     professions.profession_name=request.json.get("status")
+#     professions.fk_user_id=request.json.get("user_id")
+#     professions.fk_publication_id=request.json.get("pub_id")
+#     db.session.add(pololito)
+#     db.session.commit()
+#     return jsonify("Felicidades por su pololito exito")
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
