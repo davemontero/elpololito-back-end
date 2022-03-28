@@ -10,13 +10,13 @@ from flask_jwt_extended import jwt_required
 from datetime import datetime
 
 from itsdangerous import Serializer
-from models import db, User, Person, Publication
+from models import Professions, db, User, Person, Publication
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:TU_CLAVE_DEBE_IR_AQUI@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
 app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -183,6 +183,14 @@ def publication():
         
  
 #Mati's code
+
+@app.route("/get-workers", methods=['GET'])
+def workers():
+    results = db.session.query(Person, User, Professions).select_from(Person).join(User).join(Professions)
+
+    for person, professions in results:
+        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+
 
 @jwt.user_identity_loader
 def user_identity_lookup(dbuser):
