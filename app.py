@@ -182,6 +182,14 @@ def publication():
  
 #Mati's code
 
+@app.route("/get-workers", methods=['GET'])
+def workers():
+    results = db.session.query(Person, User, Professions).select_from(Person).join(User).join(Professions)
+
+    for person, professions in results:
+        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+
+
 @jwt.user_identity_loader
 def user_identity_lookup(dbuser):
     return dbuser.user_id

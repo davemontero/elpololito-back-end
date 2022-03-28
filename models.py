@@ -30,6 +30,7 @@ class Person(db.Model):
         return {
             "person_id": self.person_id,
             "fullname": f"{self.person_fname} {self.person_lname}",
+            "photo": f"{self.person.photo}",
             "Confirmation":True
         }
 
@@ -84,5 +85,12 @@ class Professions(db.Model):
     profession_name = db.Column(db.String(120), nullable=False)
     professional = db.relationship('Person', secondary=person_profession, back_populates='profession')
     
+   
     def repr(self):
         return f"<User {self.profession_id}>"
+
+    def serialize(self):
+        return{
+            "id": self.profession_id,
+            "profession": self.profession_name
+        }
