@@ -1,3 +1,4 @@
+import json
 import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
@@ -55,8 +56,7 @@ def login():
         resp["msg"] = "Inicio exitoso"
         resp["error"] = ""
         resp["status"] = True
-        access_token = create_access_token(identity=dbuser)
-        return jsonify(resp, { "token": access_token} )
+        return jsonify(resp)
         
     else: 
         resp["status"] = False
@@ -78,7 +78,8 @@ def recovery():
     exist = User.query.filter_by(user_email=user).first()
 
     if exist:
-        if recovery_mail(user, str(exist.user_id)) is True:
+        token = create_access_token(identity=user)
+        if recovery_mail(user,token) is True:
             resp["status"] = True
             resp["msg"]= "Se ha enviado correo de recuperación"
             return jsonify(resp)
@@ -91,23 +92,11 @@ def recovery():
         resp["msg"]= "Correo ingresado no posee cuenta"
         return jsonify(resp)
 
-@app.route("/reset-password/<int:id>", methods=['PUT'])
-def resetPassword(id):
-    dbuser = User.query.filter_by(user_email=id).first()
-    newPassword = request.json.get("password")
-
-    pcheck = password_check(newPassword)
-    if pcheck["val"] is False:
-        resp["status"] = False
-        resp["msg"] = "La contraseña no cumple con lo establecido"
-        resp["error"] = pcheck["msg"]
-        return jsonify(resp)
-
-    dbuser.user_passwd = hashPassword(newPassword)
-    db.session.commit()
-    resp["check"] = True
-    resp["msg"] = "Contraseña cambiada exitosamente"
-    return jsonify(resp)
+@app.route("/reset-password/<string:token>", methods=['GET'])
+@jwt_required()
+def resetPassword(token):
+    current_user = get_jwt_identity()
+    print(current_user)
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
@@ -164,30 +153,12 @@ def createPerson():
     resp["error"] = ""
     return jsonify(resp)
 
-@jwt.user_identity_loader
-def user_identity_lookup(dbuser):
-    return dbuser.user_id
-
-@jwt.user_lookup_loader
-def user_lookup_callback(_jwt_header, jwt_data):
-    identity = jwt_data["sub"]
-    return User.query.filter_by(id=identity).one_or_none()
-
-
-@app.route("/home", methods=["GET"])
-@jwt_required()
-def home():
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
-
-@app.route("/who_am_i", methods=["GET"])
-@jwt_required()
-def protected():
-    
-    return jsonify(
-        id=current_user.user_id,
-        email=current_user.user_email,        
-    )
+@app.route("/get-people")
+def getPeople():
+    result = db.session.query().join().join()
+    my_list = []
+    toReturn = [my_list for item in result]
+    return jsonify(toReturn), 200
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
