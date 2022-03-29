@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-def recovery_mail(usermail, id):
+def recovery_mail(usermail, new_password):
     try:
         port = 465  # For SSL
         smtp_server = "smtp.gmail.com"
@@ -168,9 +168,8 @@ def recovery_mail(usermail, id):
                                                     <table border="0" cellpadding="0" cellspacing="0">
                                                         <tr>
                                                             <td align="center" bgcolor="#1a82e2" style="border-radius: 6px;">
-                                                                <a href="http://localhost:5000/reset-password/"""+ id +"""" target="_blank"
-                                                                    style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">
-                                                                    Reestablecer</a>
+                                                                <p style="display: inline-block;padding: 26px 50px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 24px; color: #ffffff; border-radius: 6px; letter-spacing: 12px">
+                                                                    """+ new_password +"""</p>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -182,8 +181,8 @@ def recovery_mail(usermail, id):
                                 <tr>
                                     <td align="left" bgcolor="#ffffff"
                                         style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                                        <p style="margin: 0;">Si no funciona el botón, copia y pega el siguiente enlace en tu navegador:</p>
-                                        <p style="margin: 0;"><a href="http://localhost:5000/reset-password/"""+ id +""""
+                                        <p style="margin: 0;">Ingresa al siguiente enlace en tu navegador:</p>
+                                        <p style="margin: 0;"><a href="http://localhost:5000/reset-password/"
                                                 target="_blank">http://localhost:5000/reset-password/</a></p>
                                     </td>
                                 </tr>
