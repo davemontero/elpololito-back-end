@@ -173,7 +173,6 @@ def createPerson():
     resp["error"] = ""
     return jsonify(resp)
 
-    return person.serialize()
 
 lista = []
 @app.route("/create-publication", methods=['POST','GET'])
@@ -205,10 +204,10 @@ def publication():
 
 @app.route("/get-workers", methods=['GET'])
 def workers():
-    results = db.session.query(Person, User, Professions).select_from(Person).join(User).join(Professions)
+    results = db.session.query(Person, User, Professions).select_from(Person).join(User).join(Professions).all()
 
     for person, professions in results:
-        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+        return jsonify(person.person_id, person.person_fname, person.person_lname, professions.profession_name)
 
 
 @jwt.user_identity_loader
@@ -228,20 +227,23 @@ def home():
     return jsonify(logged_in_as=current_user), 200
 
 
-
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protecteda():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 
 @app.route("/who_am_i", methods=["GET"])
-@jwt_required()
 def protected():
 
-    results = db.session.query(Person, User).select_from(Person).join(User).filter(User.user_id == current_user.user_id).first()
-    
+    workers = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
+    toReturnUser = list(map(lambda user:user.serialize(),workers))
+    print (workers)
     return jsonify(
-        name=results.person.person_fname,
-        id=current_user.user_id,
-        email=current_user.user_email,  
-    )
+            user = toReturnUser,
+            )
+
 
 @app.route("/create-pololito", methods=['POST'])
 def CreatePololito():
