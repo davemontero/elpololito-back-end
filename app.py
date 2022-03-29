@@ -1,12 +1,9 @@
+import json
 import os
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import current_user
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -15,9 +12,10 @@ from flask_jwt_extended import unset_jwt_cookies
 
 
 from itsdangerous import Serializer
-from models import Professions, db, User, Person, Publication
+from models import Professions, db, User, Person, Publication, Pololito
 from hash import verifyPassword, hashPassword
 from validate import email_check, password_check
+from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -100,31 +98,25 @@ def recovery():
     exist = User.query.filter_by(user_email=user).first()
 
     if exist:
-        resp["status"] = True
-        resp["msg"]= "Se enviará correo de recuperación"
-        return jsonify(resp)
+        token = create_access_token(identity=user)
+        if recovery_mail(user,token) is True:
+            resp["status"] = True
+            resp["msg"]= "Se ha enviado correo de recuperación"
+            return jsonify(resp)
+        else:
+            resp["status"] = False
+            resp["msg"]= "¡Ups! parece que ha ocurrido un error"
+            return jsonify(resp)
     else:
         resp["status"] = False
         resp["msg"]= "Correo ingresado no posee cuenta"
         return jsonify(resp)
 
-@app.route("/reset-password/<int:id>", methods=['PUT'])
-def resetPassword(id):
-    dbuser = User.query.filter_by(user_email=id).first()
-    newPassword = request.json.get("password")
-
-    pcheck = password_check(newPassword)
-    if pcheck["val"] is False:
-        resp["status"] = False
-        resp["msg"] = "La contraseña no cumple con lo establecido"
-        resp["error"] = pcheck["msg"]
-        return jsonify(resp)
-
-    dbuser.user_passwd = hashPassword(newPassword)
-    db.session.commit()
-    resp["check"] = True
-    resp["msg"] = "Contraseña cambiada exitosamente"
-    return jsonify(resp)
+@app.route("/reset-password/<string:token>", methods=['GET'])
+@jwt_required()
+def resetPassword(token):
+    current_user = get_jwt_identity()
+    print(current_user)
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
@@ -140,6 +132,12 @@ def createPerson():
     person.person_dob = pdob.date()
     person.person_gender = request.json.get("gender")
 
+    rut_exist = Person.query.filter_by(person_rut=request.json.get("rut")).first()
+
+    if rut_exist:
+        resp["status"] = False
+        resp["msg"]= "El RUT ingresado ya existe"
+        return jsonify(resp)
 
     ucheck = email_check(request.json.get("mail"))
     pcheck = password_check(request.json.get("password"))
@@ -155,15 +153,25 @@ def createPerson():
         resp["error"] = pcheck["msg"]
         return jsonify(resp)
 
+
+    user.user_email = request.json.get("mail")
+    email_exist = User.query.filter_by(user_email=request.json.get("mail")).first()
+    if email_exist:
+        resp["status"] = False
+        resp["msg"]= "El correo ingresado ya existe"
+        return jsonify(resp)
+
     db.session.add(person)
     db.session.flush()
     db.session.refresh(person)
-
-    user.user_email = request.json.get("mail")
     user.user_passwd  = hashPassword(request.json.get("password"))
     user.fk_person_id = person.person_id
     db.session.add(user)
     db.session.commit()
+    resp["status"] = True
+    resp["msg"] = "Usuario creado con exito"
+    resp["error"] = ""
+    return jsonify(resp)
 
     return person.serialize()
 
@@ -234,6 +242,30 @@ def protected():
         id=current_user.user_id,
         email=current_user.user_email,  
     )
+
+@app.route("/create-pololito", methods=['POST'])
+def CreatePololito():
+
+    pololito = Pololito()
+    rating="1"
+    pololito.pololito_rating=rating
+    pololito.pololito_status=request.json.get("status")
+    pololito.fk_user_id=request.json.get("user_id")
+    pololito.fk_publication_id=request.json.get("pub_id")
+    db.session.add(pololito)
+    db.session.commit()
+    return jsonify("Felicidades por su pololito exito")
+
+# @app.route("/create-profession", methods=['GET'])
+# def GetProfession():
+
+#     professions = Professions()
+#     professions.profession_name=request.json.get("status")
+#     professions.fk_user_id=request.json.get("user_id")
+#     professions.fk_publication_id=request.json.get("pub_id")
+#     db.session.add(pololito)
+#     db.session.commit()
+#     return jsonify("Felicidades por su pololito exito")
 
 if __name__ == "__main__":
     app.run(host="localhost",port="3000")
