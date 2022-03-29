@@ -8,6 +8,11 @@ from flask_jwt_extended import current_user
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+from flask_jwt_extended import set_access_cookies
+from flask_jwt_extended import unset_jwt_cookies
+
 
 from itsdangerous import Serializer
 from models import Professions, db, User, Person, Publication
@@ -17,7 +22,9 @@ from validate import email_check, password_check
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
-app.config["JWT_SECRET_KEY"] = "chanchanchan"  
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["JWT_SECRET_KEY"] = "chanchanchan8w4erg874wbvf89w7bv87bwv2398hf983hn98evb2198743knmik"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
@@ -32,6 +39,8 @@ token = {
     "token": "",
     "user_id": ""
 }
+
+
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
@@ -74,6 +83,8 @@ def login():
         resp["msg"] = "Usuario o contraseña incorrecto"
         resp["error"] = "Usuario o contraseña incorrecto"
         return jsonify(resp)
+
+
 
 
 @app.route("/password-recovery",methods=['POST'])
@@ -210,20 +221,18 @@ def home():
 
 
 
-resp2 = {
-    "id": "",
-    "email" : ""
-}   
+
 
 @app.route("/who_am_i", methods=["GET"])
 @jwt_required()
 def protected():
 
-    resp2["id"]=current_user.user_id,
-    resp2["email"]=current_user.user_email,  
+    results = db.session.query(Person, User).select_from(Person).join(User).filter(User.user_id == current_user.user_id).first()
     
-    return jsonify(resp2
-              
+    return jsonify(
+        name=results.person.person_fname,
+        id=current_user.user_id,
+        email=current_user.user_email,  
     )
 
 if __name__ == "__main__":

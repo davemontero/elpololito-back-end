@@ -30,7 +30,7 @@ class Person(db.Model):
         return {
             "person_id": self.person_id,
             "fullname": f"{self.person_fname} {self.person_lname}",
-            "photo": f"{self.person.photo}",
+            "photo": f"{self.person_photo}",
             "Confirmation":True
         }
 
