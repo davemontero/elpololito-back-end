@@ -1,3 +1,4 @@
+import json
 import os
 from unittest import result
 from flask import Flask, request, jsonify
@@ -5,7 +6,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from datetime import datetime
-from models import Pololito, Professions, db, User, Person, Publication, Pololito
+from models import Pololito, Professions, db, User, Person, Publication
 from hash import verifyPassword, hashPassword, get_random_password
 from validate import email_check, password_check
 from mail import recovery_mail
@@ -205,11 +206,20 @@ def publication():
 
 @app.route("/get-workers", methods=['GET'])
 def workers():
-    results = db.session.query(Person, User, Professions).select_from(
-        Person).join(User).join(Professions)
+    workersList = []
+    results = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
+    for person, user, publication, pololito in results:
+        workersList.append({
+            "person_id": person.person_id,
+            "name": person.person_fname,
+            "last": person.person_lname,
+            "user_id": user.user_id,
+            "mail": user.user_email,
+            "publication": publication.publication_title,
+            "pololito": pololito.pololito_id
+        })
 
-    for person, professions in results:
-        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+    return jsonify(workersList)
 
 
 @jwt.user_identity_loader
