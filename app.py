@@ -13,8 +13,8 @@ from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
-app.config["JWT_SECRET_KEY"] = "chanchanchan"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
+app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
@@ -272,6 +272,14 @@ def CreatePololito():
 #     db.session.add(pololito)
 #     db.session.commit()
 #     return jsonify("Felicidades por su pololito exito")
+@app.route("/test", methods=['GET'])
+def consulta():
+    workers = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
+    toReturnUser = list(map(lambda user:user.serialize(),workers))
+    print (workers)
+    return jsonify(
+            user = toReturnUser,
+            )
 
 
 if __name__ == "__main__":
