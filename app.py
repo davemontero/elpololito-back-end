@@ -1,4 +1,3 @@
-import json
 import os
 from unittest import result
 from flask import Flask, request, jsonify
@@ -262,16 +261,6 @@ def CreatePololito():
     db.session.commit()
     return jsonify("Felicidades por su pololito exito")
 
-# @app.route("/create-profession", methods=['GET'])
-# def GetProfession():
-
-#     professions = Professions()
-#     professions.profession_name=request.json.get("status")
-#     professions.fk_user_id=request.json.get("user_id")
-#     professions.fk_publication_id=request.json.get("pub_id")
-#     db.session.add(pololito)
-#     db.session.commit()
-#     return jsonify("Felicidades por su pololito exito")
 @app.route("/test", methods=['GET'])
 def consulta():
     workers = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
