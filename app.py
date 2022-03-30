@@ -74,6 +74,7 @@ def login():
 @app.route("/password-recovery", methods=['POST'])
 def recovery():
     user = request.json.get("mail")
+    print(user)
     ucheck = email_check(user)
 
     if ucheck is False:
@@ -177,6 +178,7 @@ def createPerson():
     return jsonify(resp)
 
     return person.serialize()
+    
 
 @app.route("/create-publication", methods=['POST', 'GET'])
 def publication():

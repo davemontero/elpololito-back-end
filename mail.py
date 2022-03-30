@@ -1,4 +1,3 @@
-from operator import truediv
 import smtplib
 import ssl
 from email.mime.text import MIMEText
