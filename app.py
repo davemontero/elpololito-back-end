@@ -12,7 +12,7 @@ from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:Ae18957319@localhost/elpololito"
 app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -186,6 +186,8 @@ def publication():
         toReturn = [publication.serialize() for publication in publications]
         return jsonify(toReturn), 200
 
+
+
         
  
 #Mati's code
@@ -216,19 +218,17 @@ def home():
 
 
 
-resp2 = {
-    "id": "",
-    "email" : ""
-}   
+
 
 @app.route("/who_am_i", methods=["GET"])
 @jwt_required()
 def protected():
 
-    resp2["id"]=current_user.user_id,
-    resp2["email"]=current_user.user_email,  
+     
     
-    return jsonify(resp2
+    return jsonify(
+        id=current_user.user_id,
+        email=current_user.user_email 
               
     )
 
@@ -236,9 +236,6 @@ def protected():
 def CreatePololito():
 
     pololito = Pololito()
-    rating="1"
-    pololito.pololito_rating=rating
-    pololito.pololito_status=request.json.get("status")
     pololito.fk_user_id=request.json.get("user_id")
     pololito.fk_publication_id=request.json.get("pub_id")
     db.session.add(pololito)
