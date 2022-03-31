@@ -1,6 +1,7 @@
 from enum import unique
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
 db = SQLAlchemy()
 
 person_profession = db.Table('person_profession', 
@@ -16,7 +17,6 @@ class Person(db.Model):
     person_phone  = db.Column(db.Integer)
     person_dob    = db.Column(db.Date, nullable=False)
     person_gender = db.Column(db.String(10))
-    person_photo  = db.Column(db.String(50))
     create_at     = db.Column(db.DateTime, default=datetime.now())
     user          = db.relationship('User', backref='person', lazy=True)
     profession    = db.relationship('Professions', secondary=person_profession, back_populates='professional')
@@ -27,9 +27,7 @@ class Person(db.Model):
     
     def serialize(self):
         return {
-            "person_id": self.person_id,
-            "fullname": f"{self.person_fname} {self.person_lname}",
-            "Confirmation":True
+            "person_id": self.person_id
         }
 
 class User(db.Model):
@@ -54,25 +52,48 @@ class Publication(db.Model):
     publication_id      = db.Column(db.Integer, primary_key=True)
     publication_desc    = db.Column(db.Text(1000), nullable=False)
     publication_place   = db.Column(db.String(50), nullable=True)
+    publication_title   = db.Column(db.String(50), nullable=True)
     create_at           = db.Column(db.DateTime, default=datetime.now())
     fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    
     def __repr__(self):
         return f"<Publication {self.publication_id}>"
+
+    def serialize(self):
+        return{
+            "pub_id":self.publication_id,
+            "Title": self.publication_title,
+            "Body":self.publication_desc,
+            "create_at":self.create_at,
+            "place": self.publication_place
+        }
 
 class Pololito(db.Model):
     pololito_id         = db.Column(db.Integer, primary_key=True)
     pololito_rating     = db.Column(db.Enum('1','2','3','4','5'), nullable=True)
     pololito_status     = db.Column(db.Boolean, default=True, unique=False)
     create_at           = db.Column(db.DateTime, default=datetime.now())
-    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-    fk_publication_id   = db.Column(db.Integer, db.ForeignKey('publication.publication_id'), nullable=False)
+    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, unique=False)
+    fk_publication_id   = db.Column(db.Integer, db.ForeignKey('publication.publication_id'), nullable=False, unique=False)
+    def repr(self):
+        return f"<User {self.pololito_id}>"
+
+    def serialize(self):
+        return{
+            "pololito_id": self.pololito_id
+        }
 
 class Professions(db.Model):
     profession_id   = db.Column(db.Integer, primary_key=True)
     profession_name = db.Column(db.String(120), nullable=False)
     professional = db.relationship('Person', secondary=person_profession, back_populates='profession')
     
+   
     def repr(self):
         return f"<User {self.profession_id}>"
 
-
+    def serialize(self):
+        return{
+            "id": self.profession_id,
+            "profession": self.profession_name
+        }
