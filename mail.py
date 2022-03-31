@@ -1,4 +1,3 @@
-from operator import truediv
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -32,7 +31,6 @@ def recovery_mail(usermail, new_password):
                             font-weight: 400;
                             src: local('Source Sans Pro Regular'), local('SourceSansPro-Regular'), url(https://fonts.gstatic.com/s/sourcesanspro/v10/ODelI1aHBYDBqgeIAH2zlBM0YzuT7MdOe03otPbuUS0.woff) format('woff');
                         }
-
                         @font-face {
                             font-family: 'Source Sans Pro';
                             font-style: normal;
@@ -68,7 +66,6 @@ def recovery_mail(usermail, new_password):
                     div[style*="margin: 16px 0;"] {
                         margin: 0 !important;
                     }
-
                     body {
                         width: 100% !important;
                         height: 100% !important;
@@ -78,11 +75,9 @@ def recovery_mail(usermail, new_password):
                     table {
                         border-collapse: collapse !important;
                     }
-
                     a {
                         color: #1a82e2;
                     }
-
                     img {
                         height: auto;
                         line-height: 100%;
@@ -192,7 +187,6 @@ def recovery_mail(usermail, new_password):
                                         <p style="margin: 0;">¡Saludos!,<br> El equipo Pololito</p>
                                     </td>
                                 </tr>
-
                             </table>
                             <!--[if (gte mso 9)|(IE)]>
                     </td>
