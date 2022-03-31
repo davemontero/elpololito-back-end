@@ -8,12 +8,13 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from datetime import datetime
 from models import db, User, Person
-from hash import verifyPassword, hashPassword
+from hash import verifyPassword, hashPassword, get_random_password
+from mail import recovery_mail
 from validate import email_check, password_check
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:<clave>@localhost/elpololito"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
 app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -36,37 +37,38 @@ def login():
     pcheck = password_check(pwrd)
 
     if ucheck is False:
-        resp["status"] = False
-        resp["msg"]= "Favor, ingresar un correo valido"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Ingresar un correo valido"
+        })
         
     if pcheck["val"] is False:
-        resp["status"] = False
-        resp["msg"] = "Usuario o contraseña incorrecto"
-        resp["error"] = pcheck["msg"]
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Usuario o contraseña incorrecto"
+        })
     
     dbuser = User.query.filter_by(user_email=user).first()
     
     if not dbuser:
-        resp["status"] = False
-        resp["msg"] = "Usuario ingresado no esta registrado"
-        resp["error"] = "Usuario ingresado no esta registrado"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Usuarios ingresado no esta registrado"
+        })
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
-        user=User()
-        resp["msg"] = "Inicio exitoso"
-        resp["error"] = ""
-        resp["status"] = True
+        user = User()
         access_token = create_access_token(identity=user.user_id)
-        return jsonify(resp, { "token": access_token, "user_id": user.user_id })
-        
+        return jsonify({
+            "status": True,
+            "msg": "Inicio exitoso",
+            "token": access_token
+            })
     else: 
-        resp["status"] = False
-        resp["msg"] = "Usuario o contraseña incorrecto"
-        resp["error"] = "Usuario o contraseña incorrecto"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Usuario o contraseña incorrecto"
+        })
 
 
 @app.route("/password-recovery",methods=['POST'])
@@ -75,38 +77,48 @@ def recovery():
     ucheck = email_check(user)
 
     if ucheck is False:
-        resp["status"] = False
-        resp["msg"]= "Favor, ingresar un correo valido"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Ingresar un correo valido"
+        })
 
     exist = User.query.filter_by(user_email=user).first()
 
     if exist:
-        resp["status"] = True
-        resp["msg"]= "Se enviará correo de recuperación"
-        return jsonify(resp)
+        new_pass = get_random_password()
+        exist.user_passwd = hashPassword(new_pass)
+        db.session.commit()
+        if recovery_mail(user,new_pass) is True:
+            return jsonify({
+                "status": True,
+                "msg": "Se enviará correo de recuperación"
+            })
     else:
-        resp["status"] = False
-        resp["msg"]= "Correo ingresado no posee cuenta"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Correo ingresado no posee cuenta"
+        })
 
-@app.route("/reset-password/<int:id>", methods=['PUT'])
-def resetPassword(id):
-    dbuser = User.query.filter_by(user_email=id).first()
-    newPassword = request.json.get("password")
+@app.route("/reset-password", methods=['PUT'])
+def resetPassword():
+    
+    user = request.json.get("mail")
+    old = request.json.get("old_password")
+    new = request.json.get("new_password")
+    dbUser = User.query.filter_by(user_email=user).first()
 
-    pcheck = password_check(newPassword)
-    if pcheck["val"] is False:
-        resp["status"] = False
-        resp["msg"] = "La contraseña no cumple con lo establecido"
-        resp["error"] = pcheck["msg"]
-        return jsonify(resp)
-
-    dbuser.user_passwd = hashPassword(newPassword)
-    db.session.commit()
-    resp["check"] = True
-    resp["msg"] = "Contraseña cambiada exitosamente"
-    return jsonify(resp)
+    if verifyPassword(dbUser.user_passwd, old) is True:
+        dbUser.user_passwd = hashPassword(new)
+        db.session.commit()
+        return jsonify({
+            "status": True,
+            "msg": "Se ha modificado la contraseña correctamente"
+        })
+    else:
+        return jsonify({
+            "status": False,
+            "msg": "La contraseña actual ingresada es incorrecta"
+        })
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
