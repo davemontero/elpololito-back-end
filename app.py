@@ -12,8 +12,8 @@ from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:fgDSurwDPq5pwpJjt9q5@localhost/elpololito"
-app.config["JWT_SECRET_KEY"] = "chanchanchan"  
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
+app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
@@ -28,11 +28,14 @@ token = {
     "token": "",
     "user_id": ""
 }
+
+
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
+    tokenUser = User.query.filter_by(user_email=user).first()
 
     ucheck = email_check(user)
     pcheck = password_check(pwrd)
@@ -54,12 +57,11 @@ def login():
     if not dbuser:
         return jsonify({
             "status": False,
-            "msg": "Usuarios ingresado no esta registrado"
+            "msg": "Usuario ingresado no esta registrado"
         })
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
-        user = User()
-        access_token = create_access_token(identity=user.user_id)
+        access_token = create_access_token(identity=tokenUser)
         return jsonify({
             "status": True,
             "msg": "Inicio exitoso",
@@ -177,7 +179,6 @@ def createPerson():
     resp["error"] = ""
     return jsonify(resp)
 
-    return person.serialize()
 
 @app.route("/create-publication", methods=['POST', 'GET'])
 def publication():
@@ -205,17 +206,18 @@ def publication():
 # Mati's code
 
 @app.route("/get-workers", methods=['GET'])
+@jwt_required()
 def workers():
     results = db.session.query(Person, User, Professions).select_from(
         Person).join(User).join(Professions)
 
     for person, professions in results:
-        return jsonify(person.person_id, person.person_fname, person.person_lname, person.person_photo, professions.profession_name)
+        return jsonify(person.person_id, person.person_fname, person.person_lname, professions.profession_name)
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(dbuser):
-    return dbuser.user_id
+def user_identity_lookup(tokenUser):
+    return tokenUser.user_id
 
 
 @jwt.user_lookup_loader
@@ -236,9 +238,12 @@ resp2 = {
 }
 
 @app.route("/who_am_i", methods=["GET"])
-def protected():
-    results = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
-    return jsonify("testing")
+@jwt_required()
+def whoami():
+   
+   return jsonify(      
+        username=current_user.user_email
+    )
 
 @app.route("/create-pololito", methods=['POST'])
 def CreatePololito():
