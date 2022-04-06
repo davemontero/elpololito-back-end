@@ -67,7 +67,8 @@ class Publication(db.Model):
             "Body":self.publication_desc,
             "create_at":self.create_at,
             "place": self.publication_place,
-            "status":self.publication_status
+            "status":self.publication_status,
+            "fk_user_id":self.fk_user_id
         }
 
 class Pololito(db.Model):

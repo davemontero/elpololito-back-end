@@ -12,11 +12,7 @@ from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-<<<<<<< HEAD
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:Ae18957319@localhost/elpololito"
-=======
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
->>>>>>> 8427b82514e1dca1b2ebbe12da1316516737c572
 app.config["JWT_SECRET_KEY"] = "chanchanchan"  
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -205,14 +201,10 @@ def publication():
         return jsonify(toReturn), 200
 
 
-<<<<<<< HEAD
 
         
  
 #Mati's code
-=======
-# Mati's code
->>>>>>> 8427b82514e1dca1b2ebbe12da1316516737c572
 
 @app.route("/get-workers", methods=['GET'])
 def workers():
@@ -220,10 +212,10 @@ def workers():
     results = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
     for person, user, publication, pololito in results:
         workersList.append({
-            "person_id": person.person_id,
+            "poster_id":pololito.fk_user_id,
             "name": person.person_fname,
             "last": person.person_lname,
-            "user_id": user.user_id,
+            "Worker_id":publication.fk_user_id,
             "mail": user.user_email,
             "publication": publication.publication_title,
             "pololito": pololito.pololito_id
@@ -249,47 +241,31 @@ def home():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-<<<<<<< HEAD
 
 
-
-=======
 resp2 = {
     "id": "",
-    "email": ""
-}
->>>>>>> 8427b82514e1dca1b2ebbe12da1316516737c572
+    "email" : ""
+}   
 
 @app.route("/who_am_i", methods=["GET"])
+@jwt_required()
 def protected():
-<<<<<<< HEAD
 
-     
+    resp2["id"]=current_user.user_id,
+    resp2["email"]=current_user.user_email,  
     
-    return jsonify(
-        id=current_user.user_id,
-        email=current_user.user_email 
-              
-    )
-=======
-    results = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
-    return jsonify("testing")
->>>>>>> 8427b82514e1dca1b2ebbe12da1316516737c572
+    return jsonify(resp2)
 
 @app.route("/create-pololito", methods=['POST'])
 def CreatePololito():
 
     pololito = Pololito()
-<<<<<<< HEAD
-    pololito.fk_user_id=request.json.get("user_id")
-    pololito.fk_publication_id=request.json.get("pub_id")
-=======
     rating = "1"
     pololito.pololito_rating = rating
     pololito.pololito_status = request.json.get("status")
     pololito.fk_user_id = request.json.get("user_id")
     pololito.fk_publication_id = request.json.get("pub_id")
->>>>>>> 8427b82514e1dca1b2ebbe12da1316516737c572
     db.session.add(pololito)
     db.session.commit()
     return jsonify("Felicidades por su pololito exito")
