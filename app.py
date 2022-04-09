@@ -35,7 +35,6 @@ token = {
 def login():
     user = request.json.get("user")
     pwrd = request.json.get("password")
-    tokenUser = User.query.filter_by(user_email=user).first()
 
     ucheck = email_check(user)
     pcheck = password_check(pwrd)
@@ -61,7 +60,7 @@ def login():
         })
     
     if  verifyPassword(dbuser.user_passwd, pwrd) is True:
-        access_token = create_access_token(identity=tokenUser)
+        access_token = create_access_token(identity=dbuser)
         return jsonify({
             "status": True,
             "msg": "Inicio exitoso",
@@ -123,6 +122,15 @@ def resetPassword():
             "status": False,
             "msg": "La contraseña actual ingresada es incorrecta"
         })
+
+@app.route("/get-user-info")
+@jwt_required()
+def userInfo():
+    current_user = get_jwt_identity()
+    results = db.session.query(Person).join(User).filter_by(user_id=current_user).all()
+    toReturn = list(map(lambda person: person.serialize(), results))
+    return jsonify(toReturn)
+
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
