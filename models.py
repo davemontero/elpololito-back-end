@@ -55,6 +55,7 @@ class Publication(db.Model):
     publication_desc    = db.Column(db.Text(1000), nullable=False)
     publication_place   = db.Column(db.String(50), nullable=True)
     publication_title   = db.Column(db.String(50), nullable=True)
+    publication_status  = db.Column(db.Boolean, default=True, unique=False)
     create_at           = db.Column(db.DateTime, default=datetime.now())
     fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
     
@@ -67,7 +68,9 @@ class Publication(db.Model):
             "Title": self.publication_title,
             "Body":self.publication_desc,
             "create_at":self.create_at,
-            "place": self.publication_place
+            "place": self.publication_place,
+            "status":self.publication_status,
+            "fk_user_id":self.fk_user_id
         }
 
 class Pololito(db.Model):

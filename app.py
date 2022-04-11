@@ -5,15 +5,17 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from datetime import datetime
-from models import Pololito, Professions, db, User, Person, Publication, Pololito
+from models import Pololito, Professions, db, User, Person, Publication
 from hash import verifyPassword, hashPassword, get_random_password
 from validate import email_check, password_check
 from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
 app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
+
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
@@ -212,16 +214,28 @@ def publication():
         return jsonify(toReturn), 200
 
 
-# Mati's code
+
+        
+ 
+#Mati's code
 
 @app.route("/get-workers", methods=['GET'])
 @jwt_required()
 def workers():
-    results = db.session.query(Person, User, Professions).select_from(
-        Person).join(User).join(Professions)
+    workersList = []
+    results = db.session.query(Person, User, Pololito, Publication).select_from(Person).join(User).join(Pololito).join(Publication).all()
+    for person, user, pololito, publication in results:
+        workersList.append({
+            "Worker_id":pololito.fk_user_id,
+            "name": person.person_fname,
+            "last": person.person_lname,
+            "mail": user.user_email,
+            "pololito": pololito.pololito_id,
+            "Title":publication.publication_title,
+            "poster_id":publication.fk_user_id
+        })
 
-    for person, professions in results:
-        return jsonify(person.person_id, person.person_fname, person.person_lname, professions.profession_name)
+    return jsonify(workersList)
 
 
 @jwt.user_identity_loader
@@ -241,13 +255,16 @@ def home():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
+
+
 resp2 = {
     "id": "",
-    "email": ""
-}
+    "email" : ""
+}   
 
 @app.route("/who_am_i", methods=["GET"])
 @jwt_required()
+
 def whoami():
    
    return jsonify(      
@@ -268,16 +285,6 @@ def CreatePololito():
     db.session.commit()
     return jsonify("Felicidades por su pololito exito")
 
-# @app.route("/create-profession", methods=['GET'])
-# def GetProfession():
-
-#     professions = Professions()
-#     professions.profession_name=request.json.get("status")
-#     professions.fk_user_id=request.json.get("user_id")
-#     professions.fk_publication_id=request.json.get("pub_id")
-#     db.session.add(pololito)
-#     db.session.commit()
-#     return jsonify("Felicidades por su pololito exito")
 
 @app.route("/test", methods=['GET'])
 def consulta():
