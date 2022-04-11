@@ -209,16 +209,16 @@ def publication():
 @app.route("/get-workers", methods=['GET'])
 def workers():
     workersList = []
-    results = db.session.query(Person, User, Publication, Pololito).select_from(Person).join(User).join(Publication).join(Pololito).all()
-    for person, user, publication, pololito in results:
+    results = db.session.query(Person, User, Pololito, Publication).select_from(Person).join(User).join(Pololito).join(Publication).all()
+    for person, user, pololito, publication in results:
         workersList.append({
-            "poster_id":pololito.fk_user_id,
+            "Worker_id":pololito.fk_user_id,
             "name": person.person_fname,
             "last": person.person_lname,
-            "Worker_id":publication.fk_user_id,
             "mail": user.user_email,
-            "publication": publication.publication_title,
-            "pololito": pololito.pololito_id
+            "pololito": pololito.pololito_id,
+            "Title":publication.publication_title,
+            "poster_id":publication.fk_user_id
         })
 
     return jsonify(workersList)
