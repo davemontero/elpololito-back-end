@@ -12,8 +12,10 @@ from mail import recovery_mail
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:Ae18957319@localhost/elpololito"
-app.config["JWT_SECRET_KEY"] = "chanchanchan"  
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
+app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
+
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
 db.init_app(app)
@@ -28,6 +30,8 @@ token = {
     "token": "",
     "user_id": ""
 }
+
+
 # Dave code
 @app.route("/login", methods=['POST'])
 def login():
@@ -38,48 +42,50 @@ def login():
     pcheck = password_check(pwrd)
 
     if ucheck is False:
-        resp["status"] = False
-        resp["msg"] = "Favor, ingresar un correo valido"
-        return jsonify(resp)
-
+        return jsonify({
+            "status": False,
+            "msg": "Ingresar un correo valido"
+        })
+        
     if pcheck["val"] is False:
-        resp["status"] = False
-        resp["msg"] = "Usuario o contraseña incorrecto"
-        resp["error"] = pcheck["msg"]
-        return jsonify(resp)
-
+        return jsonify({
+            "status": False,
+            "msg": "Usuario o contraseña incorrecto"
+        })
+    
     dbuser = User.query.filter_by(user_email=user).first()
 
     if not dbuser:
-        resp["status"] = False
-        resp["msg"] = "Usuario ingresado no esta registrado"
-        resp["error"] = "Usuario ingresado no esta registrado"
-        return jsonify(resp)
-
-    if verifyPassword(dbuser.user_passwd, pwrd) is True:
-        resp["msg"] = "Inicio exitoso"
-        resp["error"] = ""
-        resp["status"] = True
-        token["token"] = create_access_token(identity=dbuser)
-        token["user_id"] = dbuser.user_id
-        return jsonify(resp, token)
-
-    else:
-        resp["status"] = False
-        resp["msg"] = "Usuario o contraseña incorrecto"
-        resp["error"] = "Usuario o contraseña incorrecto"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Usuario ingresado no esta registrado"
+        })
+    
+    if  verifyPassword(dbuser.user_passwd, pwrd) is True:
+        access_token = create_access_token(identity=dbuser)
+        return jsonify({
+            "status": True,
+            "msg": "Inicio exitoso",
+            "token": access_token
+            })
+    else: 
+        return jsonify({
+            "status": False,
+            "msg": "Usuario o contraseña incorrecto"
+        })
 
 
 @app.route("/password-recovery", methods=['POST'])
 def recovery():
     user = request.json.get("mail")
+    print(user)
     ucheck = email_check(user)
 
     if ucheck is False:
-        resp["status"] = False
-        resp["msg"] = "Favor, ingresar un correo valido"
-        return jsonify(resp)
+        return jsonify({
+            "status": False,
+            "msg": "Ingresar un correo valido"
+        })
 
     exist = User.query.filter_by(user_email=user).first()
 
@@ -88,36 +94,44 @@ def recovery():
         exist.user_passwd = hashPassword(new_pass)
         db.session.commit()
         if recovery_mail(user,new_pass) is True:
-            resp["status"] = True
-            resp["msg"] = "Se ha enviado correo de recuperación con su nueva contraseña"
-            return jsonify(resp)
-        else:
-            resp["status"] = False
-            resp["msg"] = "¡Ups! parece que ha ocurrido un error"
-            return jsonify(resp)
+            return jsonify({
+                "status": True,
+                "msg": "Se enviará correo de recuperación"
+            })
     else:
-        resp["status"] = False
-        resp["msg"] = "Correo ingresado no posee cuenta"
-        return jsonify(resp)
-
+        return jsonify({
+            "status": False,
+            "msg": "Correo ingresado no posee cuenta"
+        })
 
 @app.route("/reset-password", methods=['PUT'])
 def resetPassword():
+    
     user = request.json.get("mail")
     old = request.json.get("old_password")
     new = request.json.get("new_password")
     dbUser = User.query.filter_by(user_email=user).first()
+
     if verifyPassword(dbUser.user_passwd, old) is True:
         dbUser.user_passwd = hashPassword(new)
         db.session.commit()
-        resp["status"] = True
-        resp["msg"] = "Se ha modificado la contraseña correctamente"
-        return jsonify(resp)
+        return jsonify({
+            "status": True,
+            "msg": "Se ha modificado la contraseña correctamente"
+        })
     else:
-        resp["status"] = False
-        resp["msg"] = "Contraseña incorrecta"
+        return jsonify({
+            "status": False,
+            "msg": "La contraseña actual ingresada es incorrecta"
+        })
 
-
+@app.route("/get-user-info")
+@jwt_required()
+def userInfo():
+    current_user = get_jwt_identity()
+    results = db.session.query(Person).join(User).filter_by(user_id=current_user).all()
+    toReturn = list(map(lambda person: person.serialize(), results))
+    return jsonify(toReturn)
 
 
 @app.route("/create-person", methods=['POST'])
@@ -172,11 +186,10 @@ def createPerson():
     db.session.add(user)
     db.session.commit()
     resp["status"] = True
-    resp["msg"] = "Usuario creado con exito"
+    resp["msg"] = f"Usuario {person.person_fname} creado con exito"
     resp["error"] = ""
     return jsonify(resp)
 
-    return person.serialize()
 
 @app.route("/create-publication", methods=['POST', 'GET'])
 def publication():
@@ -207,6 +220,7 @@ def publication():
 #Mati's code
 
 @app.route("/get-workers", methods=['GET'])
+@jwt_required()
 def workers():
     workersList = []
     results = db.session.query(Person, User, Pololito, Publication).select_from(Person).join(User).join(Pololito).join(Publication).all()
@@ -225,8 +239,8 @@ def workers():
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(dbuser):
-    return dbuser.user_id
+def user_identity_lookup(tokenUser):
+    return tokenUser.user_id
 
 
 @jwt.user_lookup_loader
@@ -250,12 +264,13 @@ resp2 = {
 
 @app.route("/who_am_i", methods=["GET"])
 @jwt_required()
-def protected():
 
-    resp2["id"]=current_user.user_id,
-    resp2["email"]=current_user.user_email,  
-    
-    return jsonify(resp2)
+def whoami():
+   
+   return jsonify(      
+        username=current_user.user_email,
+        id=current_user.user_id
+    )
 
 @app.route("/create-pololito", methods=['POST'])
 def CreatePololito():
@@ -269,6 +284,7 @@ def CreatePololito():
     db.session.add(pololito)
     db.session.commit()
     return jsonify("Felicidades por su pololito exito")
+
 
 @app.route("/test", methods=['GET'])
 def consulta():

@@ -13,8 +13,8 @@ class Person(db.Model):
     person_sname  = db.Column(db.String(50))
     person_lname  = db.Column(db.String(50), nullable=False)
     person_lname2 = db.Column(db.String(50))
-    person_rut    = db.Column(db.Integer, nullable=False, unique=True)
-    person_phone  = db.Column(db.Integer)
+    person_rut    = db.Column(db.String(12), nullable=False, unique=True)
+    person_phone  = db.Column(db.String(13))
     person_dob    = db.Column(db.Date, nullable=False)
     person_gender = db.Column(db.String(10))
     create_at     = db.Column(db.DateTime, default=datetime.now())
@@ -27,7 +27,9 @@ class Person(db.Model):
     
     def serialize(self):
         return {
-            "person_id": self.person_id
+            "person_id": self.person_id,
+            "person_name": self.person_fname,
+            "person_last": self.person_lname
         }
 
 class User(db.Model):
@@ -76,8 +78,8 @@ class Pololito(db.Model):
     pololito_rating     = db.Column(db.Enum('1','2','3','4','5'), nullable=True)
     pololito_status     = db.Column(db.Boolean, default=True, unique=False)
     create_at           = db.Column(db.DateTime, default=datetime.now())
-    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, unique=False)
-    fk_publication_id   = db.Column(db.Integer, db.ForeignKey('publication.publication_id'), nullable=False, unique=False)
+    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, unique=True)
+    fk_publication_id   = db.Column(db.Integer, db.ForeignKey('publication.publication_id'), nullable=False, unique=True)
     def repr(self):
         return f"<User {self.pololito_id}>"
 
