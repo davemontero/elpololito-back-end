@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import Pololito, Professions, db, User, Person, Publication
 from hash import verifyPassword, hashPassword, get_random_password
 from validate import email_check, password_check
@@ -16,6 +16,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
 app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
 app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 
 jwt = JWTManager(app)
 Migrate(app, db, render_as_batch=True)
@@ -295,6 +296,15 @@ def consulta():
     return jsonify(
             user = toReturnUser,
             )
+
+
+@app.route("/get-professions")
+def getProfessions():
+    professions = Professions.query.get.all()
+
+    toReturn = [professions.serialize() for profession in professions]
+    return jsonify(toReturn), 200
+
 
 
 if __name__ == "__main__":
