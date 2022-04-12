@@ -14,6 +14,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:root@localhost/elpololito"
+app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
 app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
 
 jwt = JWTManager(app)
@@ -128,11 +129,14 @@ def resetPassword():
 @app.route("/get-user-info")
 @jwt_required()
 def userInfo():
+    info=[]
     current_user = get_jwt_identity()
-    results = db.session.query(Person).join(User).filter_by(user_id=current_user).all()
-    toReturn = list(map(lambda person: person.serialize(), results))
-    return jsonify(toReturn)
-
+    results = db.session.query(Person,User).join(User).filter_by(user_id=current_user).all()
+    for person, user in results:
+        info.append({"name":person.person_fname,
+                     "id":user.user_id,
+                     "mail":user.user_email})
+    return jsonify(info)
 
 @app.route("/create-person", methods=['POST'])
 def createPerson():
@@ -220,7 +224,6 @@ def publication():
 #Mati's code
 
 @app.route("/get-workers", methods=['GET'])
-@jwt_required()
 def workers():
     workersList = []
     results = db.session.query(Person, User, Pololito, Publication).select_from(Person).join(User).join(Pololito).join(Publication).all()

@@ -78,7 +78,7 @@ class Pololito(db.Model):
     pololito_rating     = db.Column(db.Enum('1','2','3','4','5'), nullable=True)
     pololito_status     = db.Column(db.Boolean, default=True, unique=False)
     create_at           = db.Column(db.DateTime, default=datetime.now())
-    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, unique=True)
+    fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, unique=False)
     fk_publication_id   = db.Column(db.Integer, db.ForeignKey('publication.publication_id'), nullable=False, unique=True)
     def repr(self):
         return f"<User {self.pololito_id}>"
