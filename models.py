@@ -3,10 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 db = SQLAlchemy()
-
-person_profession = db.Table('person_profession', 
-    db.Column('fk_person_id', db.Integer, db.ForeignKey('person.person_id')), 
-    db.Column('fk_profession_id', db.Integer, db.ForeignKey('professions.profession_id')))
 class Person(db.Model):
     person_id     = db.Column(db.Integer, primary_key=True)
     person_fname  = db.Column(db.String(50), nullable=False)
@@ -19,7 +15,6 @@ class Person(db.Model):
     person_gender = db.Column(db.String(10))
     create_at     = db.Column(db.DateTime, default=datetime.now())
     user          = db.relationship('User', backref='person', lazy=True)
-    profession    = db.relationship('Professions', secondary=person_profession, back_populates='professional')
     
 
     def __repr__(self):
@@ -58,6 +53,7 @@ class Publication(db.Model):
     publication_status  = db.Column(db.Boolean, default=True, unique=False)
     create_at           = db.Column(db.DateTime, default=datetime.now())
     fk_user_id          = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    fk_profession_id    = db.Column(db.Integer, db.ForeignKey('professions.profession_id'), nullable=False)
     
     def __repr__(self):
         return f"<Publication {self.publication_id}>"
@@ -91,8 +87,7 @@ class Pololito(db.Model):
 class Professions(db.Model):
     profession_id   = db.Column(db.Integer, primary_key=True)
     profession_name = db.Column(db.String(120), nullable=False)
-    professional = db.relationship('Person', secondary=person_profession, back_populates='profession')
-    
+    professions     = db.relationship('Publication', backref='professions', lazy=True)
    
     def repr(self):
         return f"<User {self.profession_id}>"
