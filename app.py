@@ -204,7 +204,7 @@ def publication():
         publication.publication_place = request.json.get("address")
         publication.publication_title = request.json.get("title")
         publication.fk_user_id = request.json.get("user_id")
-        publication.fk_profession_id = request.json.get("jobs")
+        publication.fk_profession_id = request.json.get("profession_id")
 
         db.session.add(publication)
         db.session.flush()
