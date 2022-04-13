@@ -306,6 +306,5 @@ def getProfessions():
     return jsonify(toReturn), 200
 
 
-
 if __name__ == "__main__":
     app.run(host="localhost", port="3000")
