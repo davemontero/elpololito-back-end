@@ -14,7 +14,6 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://root:luffy@localhost/elpololito"
-app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
 app.config["JWT_SECRET_KEY"] = "132iunfoiew09j3209d213mlkmzcpkcv0w3ir092k3mfppmzxclm03e92191CHAN"  
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 
@@ -205,6 +204,7 @@ def publication():
         publication.publication_place = request.json.get("address")
         publication.publication_title = request.json.get("title")
         publication.fk_user_id = request.json.get("user_id")
+        publication.fk_profession_id = request.json.get("jobs")
 
         db.session.add(publication)
         db.session.flush()
@@ -299,10 +299,12 @@ def consulta():
 
 
 @app.route("/get-professions")
+@jwt_required()
 def getProfessions():
-    professions = Professions.query.get.all()
+    
+    professions = Professions.query.all()
 
-    toReturn = [professions.serialize() for profession in professions]
+    toReturn = [profession.serialize() for profession in professions]
     return jsonify(toReturn), 200
 
 
